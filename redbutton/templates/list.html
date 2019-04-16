@@ -1,0 +1,64 @@
+{% extends 'file_base.html' %}
+{% load static %}
+{% load templatehelpers %}
+{% block javascript %}
+  {# JQUERY FILE UPLOAD SCRIPTS #}
+  <script src="{% static 'js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
+  <script src="{% static 'js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+
+    </div>
+    <div class="panel-body " style="overflow:scroll">
+     <form>
+        <table id="lead_list_table" class="table table-bordered hover" data-url="{% url 'leads_list' %}" cellspacing="0" width="100%">
+            <thead>
+                <tr class="headings">
+                    <th><input type="checkbox" id="selectall"/></th>
+                    <th>ID</th>
+                    <th>게임명</th>
+                    <th>출시년도</th>
+                    <th>장르</th>
+                    <th>LastUpdate</th>
+                    <th>위치</th>
+                    <th class="no-link last"><span class="nobr"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in post_list %}
+                    <tr class="">
+                        <td class=""><input type="checkbox" class="checkbxcolor" id="lead"></td>
+                        <td class=" "><a  data-url="" id="lead" data-toggle="modal" data-title="View Enquiry" data-target=".bs-example-modal-lg">{{ post.pk}}</a></td>
+                    <td><a href="{% url 'view_post' pk=post.pk is_file=0%}">{{ post.game_name }}</a></td>
+                    <td>{{ post.created_date }}</td>
+                    <td>{{ post.genre }}</td>
+                    <td>
+                        {{ post.last_date }}
+                    </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="6"><a href="javascript:;" class="deleteall"  title="dtable" >Delete Selected</a>
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
+    </form>
+    </div>
+        <ul class="pagination">
+      {% for i in page_obj.paginator.page_range %}
+        <li>
+          <a href="{% relative_url i 'page' request.GET.urlencode %}">{{ i }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+</div>
+
+{% endblock %}

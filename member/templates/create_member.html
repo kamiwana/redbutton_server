@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% load staticfiles %}
+
+
+
+
+{% block content %}
+<form method="POST" class="signup-form">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" class="save btn btn-success" value="생성하기">
+<button type="button" class="btn btn-danger" onclick="document.location.href='{% url 'member_list' %}'">취소</button>
+</form>
+
+{% endblock content %}

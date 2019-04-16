@@ -1,0 +1,99 @@
+{% extends 'bsr/base.html' %}
+{% load staticfiles %}
+
+{% load staticfiles %}
+
+
+{% block heading %}
+{% if post.cover_img %}
+<header class="intro-header" style="background-image: url('{{post.cover_img.url}}')">
+{% else %}
+<header class="intro-header" style="background-image: url('{% static 'bsr/img/home-bg.jpg' %}')">
+{% endif %}
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+              <div class="post-heading">
+                <a class="heading" href="/">
+                  <h1>{{post.title}}</h1>
+                </a>
+                  <span class="meta">by <a href="#">{{post.author}}</a>&nbsp;&nbsp;|&nbsp;&nbsp;{{ post.created_at | date:"Y-m-d D" }}</span>
+              </div>
+            </div>
+        </div>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+
+	{% autoescape off %}
+	{{post.content|linebreaksbr }}
+	{% endautoescape %}
+
+
+  <div class="post-set-btn">
+	<div class="btn-wrap">
+  	{% if post.author == user %}
+    <a href="{%url 'study:post_edit' pk=post.pk %}">
+      <button type="button" class="btn btn-success">수정</button>
+    </a>
+    <a href="{%url 'study:post_remove' pk=post.pk %}">
+      <button type="button" class="btn btn-danger">삭제</button>
+    </a>
+    {% endif %}
+    <a href="{% url 'study:post_list' %}">
+      <button type="button" class="btn btn-info">뒤로</button>
+    </a>
+	</div>
+
+    <hr>
+
+    <form class="" action="" method="post">
+      {% csrf_token %}
+      {{ form }}
+        {% if form_edit %}
+        {% else %}
+          {% if user.is_anonymous %}
+          <span class="comment-login-required"> 댓글 입력을 위해서는 <a href="{%url 'login' %}" class="login-link">로그인</a>이 필요합니다. </span>
+          {% endif %}
+        <button class="btn btn-default btn-xs comment-save" type="submit">저장</button>
+        {% endif %}
+    </form>
+
+    {% for comment in post.comments.all %}
+      {% if comment.id == pk %}
+      <div class="comment">
+        <form class="" action="" method="post">
+          {% csrf_token %}
+          <div class="comment-info">
+              <strong>{{ comment.author }}</strong>
+              <small>{{ comment.created_date | date:'Y-m-d H:i' }}</small>
+              <button class="comment_save" type="submit"><img src="{% static 'bsr/img/edit.png' %}" class="comment_edit" alt="comment_edit_save"></button>
+          </div>
+            {{ form_edit }}
+          </form>
+      </div>
+      <hr>
+      {% else %}
+      <div class="comment">
+          <div class="comment-info">
+              <strong>{{ comment.author }}</strong>
+              <small>{{ comment.created_date | date:'Y-m-d H:i' }}</small>
+              {% if comment.author == user %}
+              <a href="{% url 'study:comment_edit' pk=comment.pk %}"><img class="comment_edit" src="{% static 'bsr/img/edit.png' %}" alt=""></a>
+              <a href="{% url 'study:comment_remove' pk=comment.pk %}"><img  class="comment_remove" src="{% static 'bsr/img/delete.png' %}" alt=""></a>
+              {% endif %}
+          </div>
+          {% autoescape off %}
+          <p>{{ comment.text|linebreaks}}</p>
+          {% endautoescape %}
+      </div>
+      <hr>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+
+
+{% endblock %}

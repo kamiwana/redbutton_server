@@ -1,0 +1,79 @@
+{% extends 'bsr/base.html' %}
+{% load staticfiles %}
+
+
+{% block heading %}
+<header class="intro-header" style="background-image: url('{% static 'bsr/img/home-bg.jpg' %}')">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+              <div class="site-heading">
+                  <h1 class><a class="heading" href="/">Weekly English</a></h1>
+                  <hr class="small">
+                  <span class="subheading">몽키와 썬샤인의 영어공부</span>
+              </div>
+            </div>
+        </div>
+    </div>
+</header>
+{% endblock %}
+
+{% block content %}
+
+<div id="board" class="container">
+	<div class="table-responsive text-center">
+		<p>
+			<form action="" method="get" class="text-right search">
+				<input type="text" name="q" value="{{ q }}" placeholder="제목 검색" class="search-input">
+				<input type="submit" value="검색" class="btn btn-success search-btn">
+			</form>
+		</p>
+		<table class="table text-center table-hover">
+			<thead>
+				<tr>
+					<th>id</th>
+					<th>Title</th>
+					<th>Author</th>
+					<th>Date</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for post in object_list %}
+				<tr>
+					<td>{{ post.id }}</td>
+					<td><a href="{% url 'study:post_detail' pk=post.pk %}">{{ post.title }} <span class="count">[{{ post.comments.count }}]</span></a></td>
+					<td>{{ post.author }}</td>
+					<td>{{ post.created_at | date:"Y-m-d D" }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+
+{% if is_paginated %}
+
+<div class="text-center pagination-wrap">
+	<ul class="pagination">
+	  {% if page_obj.has_previous %}
+	    <li><a href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+	  {% else %}
+	    <li class="disabled"><span>&laquo;</span></li>
+	  {% endif %}
+	  {% for i in paginator.page_range %}
+	    {% if page_obj.number == i %}
+	      <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+	    {% else %}
+	      <li><a href="?page={{ i }}">{{ i }}</a></li>
+	    {% endif %}
+	  {% endfor %}
+	  {% if page_obj.has_next %}
+	    <li><a href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+	  {% else %}
+	    <li class="disabled"><span>&raquo;</span></li>
+	  {% endif %}
+	</ul>
+</div>
+
+{% endif %}
+{% endblock content %}

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load templatehelpers %}
+{% block javascript %}
+  {# JQUERY FILE UPLOAD SCRIPTS #}
+  <script src="{% static 'js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
+  <script src="{% static 'js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+
+    </div>
+    <div class="panel-body " style="overflow:scroll">
+        <table id="lead_list_table" class="table table-bordered hover" data-url="{% url 'list' %}" cellspacing="0" width="100%">
+            <thead>
+                <tr class="headings">
+                    <th><input type="checkbox" id="selectall"/></th>
+                    <th>ID</th>
+                    <th>이메일</th>
+                    <th>권한</th>
+                    <th>이름</th>
+                    <th>연락처</th>
+                    <th>소속지점</th>
+                    <th>방번호</th>
+                    <th class="no-link last"><span class="nobr"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in post_list %}
+                    <tr class="">
+                        <td class=" "><a  data-url="" id="lead" data-toggle="modal" data-title="View Enquiry" data-target=".bs-example-modal-lg">{{ post.username}}</a></td>
+                    <td>{{ post.email }}</td>
+                    <td>{{ post.first_name }}</td>
+                    <td></td>
+                    <td>
+
+                    </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="text-center pagination-wrap">
+        <ul class="pagination">
+      {% for i in page_obj.paginator.page_range %}
+            <li>
+              <a href="{% relative_url i 'page' request.GET.urlencode %}">{{ i }}</a>
+            </li>
+      {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock content %}

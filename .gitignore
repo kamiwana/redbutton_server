@@ -1,0 +1,9 @@
+.config_secret/
+.git/
+__pycache__/
+apps/
+media/
+static/
+redbutton/redbutton.setting
+*.log
+*.zip

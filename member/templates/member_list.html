@@ -1,0 +1,78 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% load templatehelpers %}
+{% block content %}
+<div id="board" class="container">
+	<div class="table-responsive text-center">
+		<p class="text-left">
+            <button class="btn btn-success search-btn" onclick="document.location.href='{% url 'create_member' %}'">계정추가</button>
+		</p>
+        <form name=searchf method=get action="{% url 'member_list' %}">
+            <p align="right">
+              <input type="text" name="query"  value="{{ query }}"/>
+              <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 소속지점 검색</button>
+            </p>
+        </form>
+
+        <table class="table text-center table-hover">
+            <thead>
+                <tr class="headings">
+                    <th>ID</th>
+                    <!--th>이메일</th-->
+                    <th>권한</th>
+                    <th>이름</th>
+                    <th>연락처</th>
+                    <th>소속지점</th>
+                    <th>방번호</th>
+                    <th>생성일</th>
+                    <th></th>
+                    <th class="no-link last"><span class="nobr"></span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in post_list %}
+                    <tr class="">
+                        <td class=" ">{{ user.username}}</td>
+                        <!--td>{{ user.email }}</td-->
+                        <td>{{ user.profile.auth_verbose }}</td>
+                        <td>{{ user.first_name }}</td>
+                        <td>{{ user.profile.phone_number }}</td>
+                        <td>{{ user.branch_name }}</td>
+                        <td>{{ user.profile.room_number }}</td>
+                        <td>{{ user.date_joined }}</td>
+                        <td>
+                            <button class="btn btn-success search-btn" onclick="document.location.href='{% url 'update_member'  id=user.id %}?query={{ query }}&page={{ page }}'">수정</button>
+                            <a href='{% url 'delete_member' id=user.id %}' onclick="return confirm('정말 삭제하시겠습니까?')"><button class="btn btn-success search-btn" >삭제</button></a>
+                            <button type="button" class="btn btn-success" onclick="document.location.href='{% url 'password_reset_member' id=user.id %}?query={{ query }}&page={{ page }}'">비밀번호변경</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="text-center pagination-wrap">
+    {% if post_list.has_other_pages %}
+      <ul class="pagination">
+        {% if post_list.has_previous %}
+          <li><a href="?page={{ post_list.previous_page_number }}">&laquo;</a></li>
+        {% else %}
+          <li class="disabled"><span>&laquo;</span></li>
+        {% endif %}
+        {% for i in post_list.paginator.page_range %}
+          {% if post_list.number == i %}
+            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+          {% else %}
+            <li><a href="?page={{ i }}">{{ i }}</a></li>
+          {% endif %}
+        {% endfor %}
+        {% if post_list.has_next %}
+          <li><a href="?page={{ post_list.next_page_number }}">&raquo;</a></li>
+        {% else %}
+          <li class="disabled"><span>&raquo;</span></li>
+        {% endif %}
+      </ul>
+    {% endif %}
+    </div>
+</div>
+{% endblock content %}

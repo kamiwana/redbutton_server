@@ -1,0 +1,192 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% load templatehelpers %}
+{% block javascript %}
+  {# JQUERY FILE UPLOAD SCRIPTS #}
+<script language="JavaScript">
+$(function () {
+    //본사
+    $("#selectall").click(function(){
+        //만약 전체 선택 체크박스가 체크된상태일경우
+        if($("#selectall").prop("checked")) {
+            //해당화면에 전체 checkbox들을 체크해준다
+             $("input[name=lead]:checkbox").prop("checked",true);
+            // 전체선택 체크박스가 해제된 경우
+            } else {
+            //해당화면에 모든 checkbox들의 체크를해제시킨다.
+             $("input[name=lead]:checkbox").prop("checked",false);
+        }
+      })
+
+    //지사
+    $("#branch_selected").click(function(){
+        if($("#branch_selected").prop("checked")) {
+            //해당화면에 전체 checkbox들을 체크해준다
+             $("input[name=branch_lead]:checkbox").prop("checked",true);
+            // 전체선택 체크박스가 해제된 경우
+            } else {
+            //해당화면에 모든 checkbox들의 체크를해제시킨다.
+             $("input[name=branch_lead]:checkbox").prop("checked",false);
+        }
+      })
+
+    //cant_explain
+    $("#cant_explain_all").click(function(){
+    //만약 전체 선택 체크박스가 체크된상태일경우
+    if($("#cant_explain_all").prop("checked")) {
+        //해당화면에 전체 checkbox들을 체크해준다
+         $("input[name=cant_explain]:checkbox").prop("checked",true);
+        // 전체선택 체크박스가 해제된 경우
+        } else {
+        //해당화면에 모든 checkbox들의 체크를해제시킨다.
+         $("input[name=cant_explain]:checkbox").prop("checked",false);
+    }
+  })
+
+    $('a.deleteall').on('click', function(e){
+        var selected_rows=[];
+        var unselected_rows=[];
+        var selected_location=[];
+        var selected_cant_explain=[];
+
+        var branch_selected_rows=[];
+        var branch_unselected_rows=[];
+        var branch_selected_location=[];
+        var branch_selected_cant_explain=[];
+
+        $('#lead_list_table').find('tr').each(function(){
+            var row=$(this);
+
+            if (row.find('input[name=lead]:checkbox').is(':checked')) {
+                selected_rows.push(row.find('input[name=lead]:checkbox').val())
+                selected_location.push(row.find('input[type=text]').val())
+                selected_cant_explain.push(row.find('input:checkbox[id=\'cant_explain\']').is(":checked"))
+            }else {
+                unselected_rows.push(row.find('input[name=lead]:checkbox').val())
+            };
+
+            if (row.find('input[name=branch_lead]:checkbox').is(':checked')) {
+                branch_selected_rows.push(row.find('span').text())
+                branch_selected_location.push(row.find('input[type=text]').val())
+                branch_selected_cant_explain.push(row.find('input:checkbox[id=\'cant_explain\']').is(":checked"))
+            }else{
+                branch_unselected_rows.push(row.find('span').text())
+            };
+        });
+
+        // slected_values=stringify
+        var selected_rows = JSON.stringify(selected_rows);
+        var unselected_rows = JSON.stringify(unselected_rows);
+        var selected_location = JSON.stringify(selected_location);
+        var selected_cant_explain = JSON.stringify(selected_cant_explain);
+
+        var branch_selected_rows = JSON.stringify(branch_selected_rows);
+        var branch_unselected_rows = JSON.stringify(branch_unselected_rows);
+        var branch_selected_location = JSON.stringify(branch_selected_location);
+        var branch_selected_cant_explain = JSON.stringify(branch_selected_cant_explain);
+
+        $.ajax({
+            url: "{% url 'branchgame_insert' branch_id=branch_id %}",
+            type: 'POST',
+            data: {'lead_list_ids': selected_rows, 'unlead_list_ids': unselected_rows,
+                   'location_list_ids':selected_location, 'cant_explain_list_ids':selected_cant_explain,
+                   'branch_lead_list_ids': branch_selected_rows, 'branch_unlead_list_ids': branch_unselected_rows,
+                   'branch_location_list_ids':branch_selected_location,
+                   'branch_cant_explain_list_ids':branch_selected_cant_explain,
+            },
+            success:function(response)
+            {
+                alert(response)
+ 	    location.reload();  	
+            }
+        })
+    });
+ });
+
+</script>
+{% endblock %}
+{% block content %}
+<div class="sidenav">
+{% for i in branch %}
+  <a href="{% url 'branchgame_list' branch_id=i.pk %}">{{ i.branch_name }}</a>
+{% endfor %}
+</div>
+<div class="main">
+    <div style="margin-bottom: 10px">
+        <span style="font-weight: bold; font-size: 20px;">{{ branch_name }}</span></div>
+    <div>
+        <form name=searchf method=get action="{% url 'branchgame_list' branch_id=branch_id  %}">
+            <p align="right">
+              <input type="text" name="query"  value="{{ query }}"/>
+              <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 게임명 검색</button>
+            </p>
+        </form>
+    </div>
+{% include 'messages.html' %}
+    <form>
+        <div>
+            총 게임 등록 수: {{ total_cnt }}
+            <a href="javascript:;" class="deleteall"  title="dtable" >선택게임저장</a>
+             {% if request.user.profile.auth <= 2 %}<button class="btn btn-success search-btn" onclick="document.location.href='{% url 'branchgame_all_insert'  branch_id=branch_id %}'">전체게임저장</button>{% endif %}
+            <br><b>*본사에서 선택한 게임만 지사에서 게임 등록이 가능합니니다.</b>
+            <div>
+        <div class="table text-center table-hover" style="margin-top: 10px; ">
+                <table id="lead_list_table" style="margin-top: 10px" class="table table-bordered hover" data-url="{% url 'branchgame_list' branch_id=branch_id %}" cellspacing="0" width="100%">
+                    <thead>
+                        <tr class="headings">
+                            <th>본사 <input type="checkbox" id="selectall" {% if request.user.profile.auth != 1 and request.user.profile.branch != '9' %}  disabled {% endif %}/></th>
+                            <th>지사 <input type="checkbox" id="branch_selected"/></th>
+                            <th>ID</th>
+                            <th>게임명</th>
+                            <th>난이도</th>
+                            <th>출시년도</th>
+                            <th>장르/테마</th>
+                            <th>LastUpdate</th>
+                            <th>위치</th>
+                            <th>설명불가<input type="checkbox" id="cant_explain_all"/></th>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in post_list %}
+
+                            <tr class="">
+                                <td class=""><input type="checkbox" class="checkbxcolor" name="lead" value="{{ post.pk}}" id="lead" {% if post.gameinfo_id is not null %} CHECKED {% endif %} {% if request.user.profile.auth != 1 and request.user.profile.branch != '9' %}  disabled {% endif %}></td>
+                                <td class=""><input type="checkbox" class="checkbxcolor" name="branch_lead" value="{{ post.pk}}" id="branch_lead" {% if post.is_view == 1 %} CHECKED {% endif %}></td>
+                                <td><span hidden>{{ post.pk}}</span>{{ post.game_id}}</td>
+                                <td>{{ post.game_name }}</td>
+                                <td>{{ post.level }}</td>
+                                <td>{{ post.created_date }}</td>
+                                <td>{{ post.genre }}</td>
+                                <td>{{ post.last_date }}</td>
+                                <td class="last"><input type="text" name="location" id="location" value="{% if post.location is not null %} {{ post.location }} {% endif %} "></td>
+                                <td class=""><input type="checkbox" class="checkbxcolor" name="cant_explain" id="cant_explain" {% if post.cant_explain == 1 %} CHECKED {% endif %}></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% if post_list.has_other_pages %}
+                  <ul class="pagination">
+                    {% if post_list.has_previous %}
+                      <li><a href="?page={{ post_list.previous_page_number }}">&laquo;</a></li>
+                    {% else %}
+                      <li class="disabled"><span>&laquo;</span></li>
+                    {% endif %}
+                    {% for i in post_list.paginator.page_range %}
+                      {% if post_list.number == i %}
+                        <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+                      {% else %}
+                        <li><a href="?page={{ i }}">{{ i }}</a></li>
+                      {% endif %}
+                    {% endfor %}
+                    {% if post_list.has_next %}
+                      <li><a href="?page={{ post_list.next_page_number }}">&raquo;</a></li>
+                    {% else %}
+                      <li class="disabled"><span>&raquo;</span></li>
+                    {% endif %}
+                  </ul>
+                {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}

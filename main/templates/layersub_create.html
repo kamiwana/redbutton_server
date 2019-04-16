@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block javascript %}
+  {# JQUERY FILE UPLOAD SCRIPTS #}
+  <script src="{% static 'js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
+  <script src="{% static 'js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
+  <script src="{% static 'js/jquery-file-upload/jquery.fileupload.js' %}"></script>
+
+  {# PHOTOS PAGE SCRIPTS #}
+  <script src="{% static 'js/main-upload.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+     <div style="margin-bottom: 10px;margin-top: 10px">
+
+    </div>
+<div class="sidenav">
+{% for i in branch %}
+  <a href="{% url 'create_main' branch_id=i.pk is_file=0 layer_div=0 %}">{{ i.branch_name }}</a>
+{% endfor %}
+</div>
+
+<div class="main">
+<div style="font-weight: bold; font-size: 20px">{{ branch_name }}</div>
+<div style="margin-top: 10px; ">
+    <button type="button" class="btn btn-primary js-upload-layersub">
+    <span class="glyphicon glyphicon-cloud-upload"></span> 레이아웃 Widget0{{ layer_div }} 클릭 이미지 업로드
+    </button>
+    <input id="fileupload_layersub" type="file" name="file"  multiple
+       style="display: none;"
+       data-url="{% url 'create_layersub' branch_id=branch_id  layer_id=layer_id layer_div=layer_div%}"
+       data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+    <table id="gallery_layersub" class="table table-bordered" style="margin-top:10px;">
+      <tbody>
+        {% for i in layerSub %}
+          <tr>
+            <td><a href="{{ i.file.url }}">{{ i.file.name }}</a></td>
+            <td>
+                <a href="{% url 'delete_layersub' pk=i.pk branch_id=branch_id layer_id=layer_id layer_div=layer_div%}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</div>
+<button class="btn btn-success search-btn" onclick="document.location.href='{% url 'create_main'  branch_id=branch_id is_file=0 layer_div=0%}'">이전</button>
+<div class="modal fade" id="modal-progress" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Uploading...</h4>
+      </div>
+      <div class="modal-body">
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" style="width: 0%;">0%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+ {% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% load staticfiles %}
+
+{% block content %}
+<form method="POST" class="signup-form">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" class="save btn btn-success" value="수정하기">
+<button type="button" class="btn btn-danger" onclick="document.location.href='{% url 'game_thema' %}'">취소</button>
+</form>
+
+{% endblock content %}

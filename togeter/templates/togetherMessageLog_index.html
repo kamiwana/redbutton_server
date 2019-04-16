@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="sidenav">
+{% for i in branch %}
+  <a href="{% url 'togetherMessageLog_list' branch_id=i.pk%}">{{ i.branch_name }}</a>
+{% endfor %}
+</div>
+
+<div class="main">
+좌측 메뉴의 지점을 선택해주세요
+</div>
+ {% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load templatehelpers %}
+{% block javascript %}
+  {# JQUERY FILE UPLOAD SCRIPTS #}
+
+{% endblock %}
+{% block content %}
+<div class="sidenav">
+{% for i in branch %}
+  <a href="{% url 'togetherMessageLog_list' branch_id=i.pk %}">{{ i.branch_name }}</a>
+{% endfor %}
+</div>
+<div class="main">
+    <div style="margin-bottom: 10px">
+        <span style="font-weight: bold; font-size: 20px;">{{ branch_name }}</span></div>
+        <div class="table text-center table-hover" style="margin-top: 10px; ">
+                <table id="lead_list_table" style="margin-top: 10px" class="table table-bordered hover" cellspacing="0" width="100%">
+                    <thead>
+                        <tr class="headings">
+                            <th>보내는 룸 아이디</th>
+                            <th>받는 룸 아이디</th>
+                            <th>메세지</th>
+                            <th>날짜</th>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in post_list %}
+                            <tr class="">
+                                <td>{{ post.sender_room_id }}</td>
+                                <td>{{ post.recv_room_id }}</td>
+                                <td>{{ post.msg }}</td>
+                                <td>{{ post.create_date }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <ul class="pagination">
+              {% for i in page_obj.paginator.page_range %}
+                <li>
+                  <a href="{% relative_url i 'page' request.GET.urlencode %}">{{ i }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+        </div>
+</div>
+{% endblock %}

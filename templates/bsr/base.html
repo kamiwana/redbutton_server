@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Red Button</title>
+    <link rel="icon" href="{% static 'bsr/img/profile-pic.png' %}">
+
+    <!-- Bootstrap Core CSS -->
+    <link href="{% static 'bsr/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Theme CSS
+    <link href="{% static 'bsr/css/clean-blog.css' %}" rel="stylesheet">-->
+
+
+    <!-- Custom Fonts -->
+	<link href='//spoqa.github.io/spoqa-han-sans/css/SpoqaHanSans-kr.css' rel='stylesheet' type='text/css'>
+    <link href="{% static 'bsr/vendor/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header page-scroll">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    Menu <i class="fa fa-bars"></i>
+                </button>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="/member/">계정관리</a>
+                    </li>
+                    <li>
+                        <a href="/branch/">지점관리</a>
+                    </li>
+                    <li>
+                        <a href="/gameinfo/">게임관리</a>
+                    </li>
+                    <li>
+                        <a href="/branch_game/">지점게임관리</a>
+                    </li>
+                    <li>
+                        <a href="/main/">배너관리</a>
+                    </li>
+                    <li>
+                        <a href="/etc/">기타</a>
+                    </li>
+                    <li>
+                        {% if user.is_active %}
+                        <a href="{% url 'logout' %}">Logout</a>
+                        {% else %}
+                        <a href="{% url 'login' %}">Login</a>
+                        {% endif %}
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li>
+                            <a href="">welcome, <span class='username'>{{ user.username }}</span></a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container"  style="margin-top: 70px">
+        <div class="row">
+
+              {% block content %}
+              {% endblock %}
+
+        </div>
+    </div>
+
+    <hr>
+
+     <!-- jQuery -->
+
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="{% static 'bsr/vendor/bootstrap/js/bootstrap.min.js' %}"></script>
+
+    <!-- Contact Form JavaScript -->
+    <script src="{% static 'bsr/js/jqBootstrapValidation.js' %}"></script>
+
+    <!-- Theme JavaScript -->
+    <script src="{% static 'bsr/js/clean-blog.min.js' %}"></script>
+
+    <script src="{% static 'js/jquery-3.1.1.min.js' %}"></script>
+
+</body>
+
+</html>

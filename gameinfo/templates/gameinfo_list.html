@@ -1,0 +1,98 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% load templatehelpers %}
+{% block javascript %}
+  {# JQUERY FILE UPLOAD SCRIPTS #}
+  <script src="{% static 'js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
+  <script src="{% static 'js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
+
+  {# PHOTOS PAGE SCRIPTS #}
+  <script src="{% static 'js/basic-upload.js' %}"></script>
+    <script src="{% static 'js/jquery-3.1.1.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div>
+        <form name=searchf method=get action="{% url 'game_info' %}">
+            <p align="right">
+              <input type="text" name="query"  value="{{ query }}"/>
+              <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 게임명 검색</button>
+            </p>
+        </form>
+        총 게시물수: {{ total_cnt }} <button class="btn btn-success search-btn" onclick="document.location.href='{% url 'create_gameinfo' %}'">게임추가</button>
+    </div>
+<div class="table-responsive text-center">
+    <table class="table text-center table-hover">
+        <thead>
+        <tr class="headings">
+            <th>ID</th>
+            <th>게임명</th>
+            <th>난이도</th>
+            <th>출시년도</th>
+            <th>장르/테마</th>
+            <th>영상</th>
+            <th>세팅방법</th>
+            <th>FAQ</th>
+            <th>설명서</th>
+            <th>LastUpdate</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+
+    {% if post_list %}
+
+        {% for post in post_list %}
+            <tr>
+                <td>{{ post.game_id}}</td>
+                <td><a href="{% url 'view_post' pk=post.pk is_file=0%}">{{ post.game_name }}</a></td>
+                <td>{{ post.level }}</td>
+                <td>{{ post.created_date }}</td>
+                <td>{{ post.genre }}</td>
+                <td>{{ post.media_cnt }} </td>
+                <td>{{ post.setting_cnt }} </td>
+                <td>{{ post.faq_cnt }} </td>
+                <td>{{ post.desc_cnt }}</td>
+                <td>{{ post.last_date }}</td>
+                <td>
+                    <button class="btn btn-success search-btn" onclick="document.location.href='{% url 'view_filters'  pk=post.pk page=page  %}'">필터</button>
+                    <button class="btn btn-success search-btn" onclick="document.location.href='{% url 'view_thema'  pk=post.pk page=page  %}'">테마</button>
+		<button class="btn btn-success search-btn" onclick="document.location.href='{% url 'update_gameinfo'  pk=post.pk %}'">수정</button>
+                    <a href='{% url 'delete_gameinfo' pk=post.pk %}' onclick="return confirm('정말 삭제하시겠습니까?')"><button class="btn btn-success search-btn" >삭제</button></a>
+                </td>
+            </tr>
+        {% endfor %}
+    {% else %}
+        <td colspan="9" class="text-center">
+            등록된 내용이 없습니다.
+        </td>
+    {% endif %}
+        </tbody>
+    </table>
+    </div>
+    <div class="text-center pagination-wrap">
+    {% if post_list.has_other_pages %}
+      <ul class="pagination">
+        {% if post_list.has_previous %}
+          <li><a href="?page={{ post_list.previous_page_number }}">&laquo;</a></li>
+        {% else %}
+          <li class="disabled"><span>&laquo;</span></li>
+        {% endif %}
+        {% for i in post_list.paginator.page_range %}
+          {% if post_list.number == i %}
+            <li class="active"><span>{{ i }} <span class="sr-only">(current)</span></span></li>
+          {% else %}
+            <li><a href="?page={{ i }}">{{ i }}</a></li>
+          {% endif %}
+        {% endfor %}
+        {% if post_list.has_next %}
+          <li><a href="?page={{ post_list.next_page_number }}">&raquo;</a></li>
+        {% else %}
+          <li class="disabled"><span>&raquo;</span></li>
+        {% endif %}
+      </ul>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}

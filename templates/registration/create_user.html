@@ -1,0 +1,31 @@
+{% extends 'bsr/base.html' %}
+
+{% load staticfiles %}
+
+{% block heading %}
+<header class="intro-header" style="background-image: url('{% static 'bsr/img/home-bg.jpg' %}')">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+              <div class="site-heading">
+                  <h1>Weekly English</h1>
+                  <hr class="small">
+                  <span class="subheading">Login</span>
+              </div>
+            </div>
+        </div>
+    </div>
+</header>
+{% endblock %}
+
+
+{% block content %}
+<form method="POST" class="signup-form" action="{% url 'createuser' %}">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" class="save btn btn-success" value="생성하기">
+<a href="">
+  <button type="button" class="btn btn-danger">취소</button>
+</a>
+</form>
+{% endblock content %}

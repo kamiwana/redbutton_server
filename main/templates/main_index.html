@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block javascript %}
+  {# JQUERY FILE UPLOAD SCRIPTS #}
+  <script src="{% static 'js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
+  <script src="{% static 'js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
+  <script src="{% static 'js/jquery-file-upload/jquery.fileupload.js' %}"></script>
+
+  {# PHOTOS PAGE SCRIPTS #}
+  <script src="{% static 'js/main-upload.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+     <div style="margin-bottom: 10px;margin-top: 10px">
+
+    </div>
+<div class="sidenav">
+{% for i in branch %}
+  <a href="{% url 'create_main' branch_id=i.pk is_file=0  layer_div=0%}">{{ i.branch_name }}</a>
+{% endfor %}
+</div>
+
+<div class="main">
+좌측 메뉴의 지점을 선택해주세요
+</div>
+ {% endblock %}
