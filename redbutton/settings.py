@@ -26,7 +26,7 @@ config_secret = json.loads(open(CONFIG_SETTINGS_COMMON_FILE).read())
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '!+%4!y06o73u!5fcl=9=@n#k=k*1j7fs*rp%p0i*f6095_hjh3'
+SECRET_KEY = config_secret['production']['secret_key']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
