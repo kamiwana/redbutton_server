@@ -20,6 +20,7 @@ from django.conf.urls.static import static
 from django.conf.urls import url, include
 from member import views
 from django.contrib.auth.decorators import login_required
+from django.views.generic import RedirectView
 
 urlpatterns = [
     #   url(r'^', include(router.urls)),
@@ -37,6 +38,7 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/', include('api.urls')),
     url(r'^accounts/', include('django.contrib.auth.urls')),
+    url(r'^static/(?P<path>.*)$', RedirectView.as_view(url='https://dc9bc8v76fw69.cloudfront.net/static/' + '%(path)s', permanent=True), name='cloud-static'),
 ]
 
 if settings.DEBUG:
