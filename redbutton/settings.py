@@ -15,8 +15,6 @@ import json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_DIR ='C:\DB\server'
-
 
 CONFIG_SECRET_DIR = os.path.join(BASE_DIR, '.config_secret')
 CONFIG_SETTINGS_COMMON_FILE = os.path.join(CONFIG_SECRET_DIR, 'settings_common.json')
@@ -29,7 +27,7 @@ config_secret = json.loads(open(CONFIG_SETTINGS_COMMON_FILE).read())
 SECRET_KEY = config_secret['production']['secret_key']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 import requests
 
@@ -61,48 +59,54 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-if DEBUG:
-    STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),
-    )
 
-    STATIC_URL = '/static/'
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    APPS_URL = os.path.join(BASE_DIR, 'apps')
-    #APPS_URL = '/apps/'
+config_secret = json.loads(open(CONFIG_SETTINGS_COMMON_FILE).read())
+AWS_HOST = config_secret['aws']['aws_host']
+AWS_ACCESS_KEY_ID = config_secret['aws']['access_key_id']
+AWS_SECRET_ACCESS_KEY = config_secret['aws']['secret_access_key']
+AWS_STORAGE_BUCKET_NAME = config_secret['aws']['s3_bucket_name']
+AWS_S3_CUSTOM_DOMAIN = 'dc9bc8v76fw69.cloudfront.net'
+#AWS_S3_CUSTOM_DOMAIN = '%s/%s' % (AWS_HOST, AWS_STORAGE_BUCKET_NAME)
+DEFAULT_FILE_STORAGE = 'redbutton.storage_backends.MediaStorage'
 
-else:
-    config_secret = json.loads(open(CONFIG_SETTINGS_COMMON_FILE).read())
-    AWS_HOST = config_secret['aws']['aws_host']
-    AWS_ACCESS_KEY_ID = config_secret['aws']['access_key_id']
-    AWS_SECRET_ACCESS_KEY = config_secret['aws']['secret_access_key']
-    AWS_STORAGE_BUCKET_NAME = config_secret['aws']['s3_bucket_name']
-    AWS_S3_CUSTOM_DOMAIN = 'dc9bc8v76fw69.cloudfront.net'
-    #AWS_S3_CUSTOM_DOMAIN = '%s/%s' % (AWS_HOST, AWS_STORAGE_BUCKET_NAME)
-    DEFAULT_FILE_STORAGE = 'redbutton.storage_backends.MediaStorage'
-
-    AWS_S3_OBJECT_PARAMETERS = {
-         'CacheControl': 'max-age=86400',
-    }
-    AWS_LOCATION = 'static'
-
-    #STATIC_URL='https://%s/%s/'%(AWS_S3_CUSTOM_DOMAIN,AWS_LOCATION)
-    STATIC_URL = 'https://dc9bc8v76fw69.cloudfront.net/'
-    MEDIA_URL = 'https://dc9bc8v76fw69.cloudfront.net/'
-
-    STATICFILES_STORAGE='storages.backends.s3boto3.S3Boto3Storage'
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config_secret['db']['name'],
-        'USER': config_secret['db']['user'],
-        'PASSWORD': config_secret['db']['password'],
-        'HOST': config_secret['db']['host'],
-        'PORT': '3306',
-    }
+AWS_S3_OBJECT_PARAMETERS = {
+     'CacheControl': 'max-age=86400',
 }
+AWS_LOCATION = 'static'
 
+#STATIC_URL='https://%s/%s/'%(AWS_S3_CUSTOM_DOMAIN,AWS_LOCATION)
+STATIC_URL = 'https://dc9bc8v76fw69.cloudfront.net/'
+MEDIA_URL = 'https://dc9bc8v76fw69.cloudfront.net/'
+
+STATICFILES_STORAGE='storages.backends.s3boto3.S3Boto3Storage'
+
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'redbutton',  # DB명
+            'USER': 'root',  # 데이터베이스계정
+            'PASSWORD': '',  # 계정비밀번호
+            'HOST': '127.0.0.1',  # 데이테베이스주소(IP)
+            'OPTIONS': {
+                "init_command": "SET GLOBAL max_connections = 100000",
+            }
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': config_secret['db']['name'],
+            'USER': config_secret['db']['user'],
+            'PASSWORD': config_secret['db']['password'],
+            'HOST': config_secret['db']['host'],
+            'PORT': '3306',
+            'OPTIONS': {
+                   "init_command": "SET GLOBAL max_connections = 100000",
+            }
+        }
+    }
 
 INSTALLED_APPS = [
     'django.contrib.admin',
