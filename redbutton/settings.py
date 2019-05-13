@@ -27,7 +27,8 @@ config_secret = json.loads(open(CONFIG_SETTINGS_COMMON_FILE).read())
 SECRET_KEY = config_secret['production']['secret_key']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
+
 
 import requests
 
@@ -46,7 +47,8 @@ def get_ec2_instance_ip():
 
 
 AWS_LOCAL_IP = get_ec2_instance_ip()
-ALLOWED_HOSTS = [AWS_LOCAL_IP, 'www.redbutton-aws.ml', 'etc', '.amazonaws.com','localhost', '127.0.0.1','www.redbuttonserver.com']
+ALLOWED_HOSTS = [AWS_LOCAL_IP, 'www.redbutton-aws.ml', 'etc', '.amazonaws.com']
+
 
 LOGIN_REDIRECT_URL = '/member/'
 
@@ -66,7 +68,6 @@ AWS_ACCESS_KEY_ID = config_secret['aws']['access_key_id']
 AWS_SECRET_ACCESS_KEY = config_secret['aws']['secret_access_key']
 AWS_STORAGE_BUCKET_NAME = config_secret['aws']['s3_bucket_name']
 AWS_S3_CUSTOM_DOMAIN = 'dc9bc8v76fw69.cloudfront.net'
-#AWS_S3_CUSTOM_DOMAIN = '%s/%s' % (AWS_HOST, AWS_STORAGE_BUCKET_NAME)
 DEFAULT_FILE_STORAGE = 'redbutton.storage_backends.MediaStorage'
 
 AWS_S3_OBJECT_PARAMETERS = {
