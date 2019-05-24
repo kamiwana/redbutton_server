@@ -223,6 +223,11 @@ def view_post(request, pk, is_file):
 
     return render(request, 'view_post.html', {'form': form,'movies': movie_list, "moviedetail_results" : moviedetail_results,'images': image_list,'subimages': subimage_list, 'subtitles': subtitle_list, "settings": setting_list,"faqs": faq_list, "descs":desc_list, "summaries":summary_list,'pk': pk,'is_file': is_file, 'gameinfo_title': gameinfo.game_name})
 
+def view_vod(request, pk):
+
+    movies = get_object_or_404(Movies, pk=pk)
+    return render(request, 'view_vod.html', {'movies_file_url': movies.file.url})
+
 import boto
 from boto.s3.key import Key
 from django.conf import settings
