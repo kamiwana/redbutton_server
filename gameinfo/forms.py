@@ -104,7 +104,7 @@ class MovieDetailForm(forms.ModelForm):
         choices=Movies.objects.none(),
         required=True,
         label="영상",
-        widget = forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     cnt_desc = forms.CharField(label='인원',
                                 widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '텍스트로 입력하세요.'})
@@ -133,11 +133,11 @@ class MovieDetailForm(forms.ModelForm):
 
         super(MovieDetailForm, self).__init__(*args, **kwargs)
         movie_list = Movies.objects.all().filter(gameinfo_id=gameinfo_id)
-        movie_choices = [(o.pk, str(o.file)) for o in movie_list]
+        movie_choices = [(o.pk, o.file.name[21:]) for o in movie_list]
         self.fields['movie_id'].choices = movie_choices
 
         subtitle_list = Subtitle.objects.all().filter(gameinfo_id=gameinfo_id)
-        subtitle_choices = [(o.pk, str(o.file)) for o in subtitle_list]
+        subtitle_choices = [(o.pk, o.file.name) for o in subtitle_list]
         self.fields['subtitle_id'].choices = subtitle_choices
 
 class MovieForm(forms.ModelForm):

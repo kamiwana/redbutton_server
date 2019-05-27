@@ -5,11 +5,56 @@
   <script src="{% static 'js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
   <script src="{% static 'js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
   <script src="{% static 'js/jquery-file-upload/jquery.fileupload.js' %}"></script>
-
   {# PHOTOS PAGE SCRIPTS #}
   <script src="{% static 'js/gameinfo-upload.js' %}"></script>
+<style>
+.black_overlay{
+    display: none;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    z-index:1001;
+    -moz-opacity: 0.8;
+    opacity:.80;
+    filter: alpha(opacity=80);
+}
+.white_content {
+    display: none;
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 70%;
+    padding: 16px;
+    border: 16px solid orange;
+    background-color: white;
+    z-index:1002;
+    overflow: auto;
+}
+video {
+   width:100%;
+   max-width:640px;
+   height:auto;
+}
+</style>
+    <script language="javascript">
+    function openPlayer()
+    {
+        document.getElementById('light').style.display='block';
+        document.getElementById('fade').style.display='block';
+        document.getElementById('player').play();
+    }
+    function closePlayer()
+    {
+        document.getElementById('player').pause();
+        document.getElementById('light').style.display='none';
+        document.getElementById('fade').style.display='none';
+    }
+    </script>
 {% endblock %}
-
 {% block content %}
     <div style="margin-bottom: 10px;margin-top: 10px">{{ gameinfo_title }}
         <button class="btn btn-default" onclick="document.location.href={% url 'game_info' %}">게임정보</button>
@@ -21,19 +66,26 @@
        style="display: none;"
        data-url="{% url 'view_post' pk=pk is_file=1%}"
        data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
-<table id="gallery" class="table table-bordered" style="margin-top:10px;">
-  <tbody>
-    {% for movie in movies %}
-      <tr>
-        <td><a href="{{ movie.file.url }}">{{ movie.file.name }}</a></td>
-        <td>
-            <a href="{% url 'delete_movie' pk=movie.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
-        </td>
-  </span>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    <table id="gallery" class="table table-bordered" style="margin-top:10px;">
+      <tbody>
+        {% for movie in movies %}
+          <tr>
+            <td><a href = "javascript:void(0)" onclick = "openPlayer();">{{ movie.file.name|cut:"gameinfo/movies/file/" }}</a></td>
+            <td>
+                <a href="{% url 'delete_movie' pk=movie.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
+            </td>
+            <div id="light" class="white_content" align="center" oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
+                <video id="player" controls controlsList="nodownload">
+                    <source src="{{ movie.file.url }}" type="video/mp4">
+                    IE 8 이하는 비디오가 나오지 않습니다. IE 버전을 업데이트 하시길 바랍니다.
+                </video>
+                <br><button class="btn btn-success search-btn" onclick = "closePlayer();">닫기</button>
+            </div>
+            <div id="fade" class="black_overlay"></div>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
     <button type="button" class="btn btn-primary js-upload-subtitle">
     <span class="glyphicon glyphicon-cloud-upload"></span> 자막업로드
@@ -76,7 +128,7 @@
   <tbody>
     {% for moviedetail_result in moviedetail_results %}
       <tr>
-        <td>{{ moviedetail_result.moive_file }}</td>
+        <td>{{ moviedetail_result.moive_file|cut:"gameinfo/movies/file/"  }}</td>
         <td>{{ moviedetail_result.cnt_desc }}</td>
         <td>{{ moviedetail_result.subtitle_file }}</td>
         <td>{{ moviedetail_result.language_type }}</td>
