@@ -44,12 +44,18 @@ class branchgameList(ListView):
         # post_list = GameInfo.objects.filter(pk__in=table1_cam_list)
 
         if query:
-            post_list = list(GameInfo.objects.raw('SELECT * FROM gameinfo_gameinfo p LEFT OUTER JOIN branch_gameinfo_branchgame t ON (p.id=t.gameinfo_id AND t.branch_id='+branch_id+') WHERE game_name LIKE "%'+query+'%"  order by game_id desc'))
+            query_temp = '%' + query + '%'
+            db_query = "SELECT * FROM gameinfo_gameinfo p LEFT OUTER JOIN branch_gameinfo_branchgame t ON " \
+                "(p.id=t.gameinfo_id AND t.branch_id=%s) WHERE game_name LIKE %s order by game_id desc"
+            post_list = list(GameInfo.objects.raw(db_query, tuple([branch_id, query_temp])))
+
             context["query"] = query
             context["is_paginated"] = False
 
         else:
-              post_list = list(GameInfo.objects.raw('SELECT * FROM gameinfo_gameinfo p LEFT OUTER JOIN branch_gameinfo_branchgame t ON (p.id=t.gameinfo_id AND t.branch_id='+branch_id+') order by game_id desc'))
+            db_query = "SELECT * FROM gameinfo_gameinfo p LEFT OUTER JOIN branch_gameinfo_branchgame t ON  " \
+                           "(p.id=t.gameinfo_id AND t.branch_id=%s) order by game_id desc"
+            post_list = list(GameInfo.objects.raw(db_query, [branch_id]))
 
         total_cnt = BranchGame.objects.filter(branch=branch_id).count()
         paginator = Paginator(post_list, self.paginate_by)
