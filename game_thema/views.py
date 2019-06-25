@@ -42,4 +42,4 @@ def delete(request, pk):
     thema_name = get_object_or_404(GameThema, pk=pk)
     thema_name.delete()
 
-    return redirect('thema_name')
+    return redirect('game_thema')
