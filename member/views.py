@@ -91,52 +91,36 @@ class memberList(ListView):
 
     def render_to_response(self, context):
 
-        page = self.request.GET.get('page', 1)
-        query = self.request.GET.get('query')
-        user_auth = str(self.request.user.profile.auth)
-        user_branch = str(self.request.user.profile.branch)
-
-        if int(user_auth) == 2 : # General Manager의 경우 게임관리로 이동
+        user_auth = int(self.request.user.profile.auth)
+        # General admin의 경우 게임관리로 이동
+        if user_auth == 2:
             return redirect('game_info')
-        elif int(user_auth) == 3 : # General Manager의 경우 지점 게임관리로 이동
+        # General Manager의 경우 지점 게임관리로 이동
+        elif user_auth == 3:
             return redirect('branchgame_index')
-        elif int(user_auth) > 3 : # buttoner, room의 경우 접근 권한 없음
+        # buttoner, room의 경우 접근 권한 없음
+        elif user_auth > 3:
             return redirect('/accounts/login/')
-        if query:
-            query = query.strip()
-            if int(user_auth) >= 3 : #Manger이하의 경우 해당 지점만 나옴
-                post_list = list(User.objects.raw(
-                    'select * from auth_user as a, member_profile as b, branch_branch as c '
-                    'where a.id = b.user_id and b.branch = c.id '
-                    'and  b.auth >= ' + user_auth + '  and b.branch = ' + user_branch +
-                    'and c.branch_name LIKE "%' + query + '%"'
-                                                      ' order by a.username asc'))
-            else :
-                post_list = list(User.objects.raw(
-                    'select * from auth_user as a, member_profile as b, branch_branch as c '
-                    'where a.id = b.user_id and b.branch = c.id '
-                    'and b.auth >= ' + user_auth + ' '
-                    'and c.branch_name LIKE "%' + query + '%"' 
-                                                    'order by a.username asc'))
 
-            context["query"] = query
-            context["page"] = page
+        page = self.request.GET.get('page', 1)
+        branch_id = self.request.GET.get('query')
+        branch_list = Branch.objects.order_by('branch_name')
+
+        if branch_id:
+            db_query = "select * from auth_user as a, member_profile as b, branch_branch as c " \
+                       "where a.id = b.user_id and b.branch = c.id " \
+                       "and c.id = %s order by a.username asc"
+            post_list = list(User.objects.raw(db_query, [branch_id]))
+
+            context["query"] = int(branch_id)
             context["is_paginated"] = False
 
         else:
-            if int(user_auth) >= 3 : #Manger이하의 경우 해당 지점만 나옴
-                post_list = list(User.objects.raw(
-                    'select * from auth_user as a, member_profile as b, branch_branch as c '
-                    'where a.id = b.user_id and b.branch = c.id '
-                    'and  b.auth >= ' + user_auth + '  and b.branch = ' + user_branch +
-                    ' order a.username asc'))
-            else :
-                post_list = list(User.objects.raw(
-                    'select * from auth_user as a, member_profile as b, branch_branch as c '
-                    'where a.id = b.user_id and b.branch = c.id '
-                    'and b.auth >= ' + user_auth + ' '
-                                                   'order by a.username asc'))
-        totalcnt =0
+            post_list = list(User.objects.extra(select={'branch_name':'branch_branch.branch_name'},tables=['member_profile','branch_branch'],
+                                                   where=['member_profile.user_id=auth_user.id','branch_branch.id=member_profile.branch']).order_by('username'))
+
+        context["page"] = page
+        totalcnt = 0
         paginator = Paginator(post_list, self.paginate_by)
 
         try:
@@ -148,6 +132,7 @@ class memberList(ListView):
 
         context["post_list"] = object
         context["total_cnt"] = totalcnt
+        context["branch_list"] = branch_list
 
         return super().render_to_response(context)
 
