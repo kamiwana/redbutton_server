@@ -27,7 +27,7 @@ config_secret = json.loads(open(CONFIG_SETTINGS_COMMON_FILE).read())
 SECRET_KEY = config_secret['production']['secret_key']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 
 import requests
@@ -47,8 +47,7 @@ def get_ec2_instance_ip():
 
 
 AWS_LOCAL_IP = get_ec2_instance_ip()
-ALLOWED_HOSTS = [AWS_LOCAL_IP, 'www.redbutton-aws.ml', 'etc', '.amazonaws.com']
-
+ALLOWED_HOSTS = [AWS_LOCAL_IP,'127.0.0.1', '.redbutton-aws.tk', 'etc', '.amazonaws.com']
 
 LOGIN_REDIRECT_URL = '/member/'
 
@@ -77,9 +76,14 @@ AWS_LOCATION = 'static'
 
 #STATIC_URL='https://%s/%s/'%(AWS_S3_CUSTOM_DOMAIN,AWS_LOCATION)
 STATIC_URL = 'https://dc9bc8v76fw69.cloudfront.net/'
-MEDIA_URL = 'https://dc9bc8v76fw69.cloudfront.net/'
+
+if DEBUG:
+    MEDIA_URL = 'https://dc9bc8v76fw69.cloudfront.com/'
+else:
+    MEDIA_URL = 'https://dc9bc8v76fw69.cloudfront.net/'
 
 STATICFILES_STORAGE='storages.backends.s3boto3.S3Boto3Storage'
+
 
 if DEBUG:
     DATABASES = {
@@ -89,25 +93,24 @@ if DEBUG:
             'USER': 'root',  # 데이터베이스계정
             'PASSWORD': '',  # 계정비밀번호
             'HOST': '127.0.0.1',  # 데이테베이스주소(IP)
-            'OPTIONS': {
-                "init_command": "SET GLOBAL max_connections = 100000",
-            }
         }
     }
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
+            'ENGINE': 'dj_db_conn_pool.backends.mysql',
             'NAME': config_secret['db']['name'],
             'USER': config_secret['db']['user'],
             'PASSWORD': config_secret['db']['password'],
             'HOST': config_secret['db']['host'],
             'PORT': '3306',
-            'OPTIONS': {
-                   "init_command": "SET GLOBAL max_connections = 100000",
+            'POOL_OPTIONS': {
+                'POOL_SIZE': 10,
+                'MAX_OVERFLOW': 10
             }
         }
-    }
+}
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -200,6 +203,7 @@ USE_TZ = True
 
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1000000000
+
 
 LOG_FILE = os.path.join(os.path.dirname(__file__), '..', 'redbuttonlog.log')
 LOGGING = {
