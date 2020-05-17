@@ -123,7 +123,7 @@ class GameInfo_V2Form(forms.ModelForm):
                                  widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '숫자로 입력하세요.'}))
 
     game_relation = forms.CharField(label='연관추천게임(여러개 입력시 게임아이디 콤마로 구분 입력)',
-                                    widget=forms.TextInput(attrs={'class': 'form-control'}))
+                                    widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)
 
     level = forms.ChoiceField(
         choices=LEVEL_TYPES,

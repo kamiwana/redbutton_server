@@ -9,7 +9,7 @@ import re
 class GameInfo(models.Model):
     game_id = models.IntegerField(null=False, blank=False, default=0)
     #game_relation = models.ManyToManyField('GameRelation', blank=True)
-    game_relation = models.CharField(max_length=255, blank=True)
+    game_relation = models.CharField(max_length=255, blank=True, null=True)
     game_name = models.CharField(max_length=50, blank=False)
     genre = models.CharField(max_length=50, blank=True)
     genre_detail = models.CharField(max_length=50, blank=True)
