@@ -17,6 +17,9 @@ urlpatterns = (
        url(r'^subimage/(?P<pk>\d+)/delete/$', views.delete_subimage, name='delete_subimage'),
        url(r'^summary/(?P<pk>\d+)/delete/$', views.delete_summary, name='delete_summary'),
        url(r'^filters/(?P<pk>\d+)/(?P<page>\d+)$', views.filters, name='view_filters'),
+       url(r'^filters_v2/(?P<pk>\d+)$', views.view_fillters_v2, name='view_filters_v2'),
        url(r'^thema/(?P<pk>\d+)/(?P<page>\d+)$', views.thema, name='view_thema'),
-
+       url(r'^vod/(?P<pk>\d+)$', views.view_vod, name='view_vod'),
+       url(r'^movies-thumbnail/(?P<pk>\d+)/(?P<movies_id>\d+)$', views.view_movies_thumbnail, name='view_movies_thumbnail'),
+       url(r'^gameinfo-autocomplete/$',  views.GameInfoAutocomplete.as_view(), name='gameinfo-autocomplete',),
 )

@@ -1,3 +1,5 @@
+#-*- coding:utf-8 -*-
+
 from django.shortcuts import render,get_object_or_404,redirect
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -5,15 +7,26 @@ from django.http import JsonResponse
 from django.db.models import Q
 from django.views.generic import ListView
 from django.urls import reverse
+from dal import autocomplete
 from .forms import *
 from .models import *
 import os
+
+class GameInfoAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        # Don't forget to filter out results depending on the visitor !
+        #if not self.request.user.is_authenticated():
+        #     return GameInfo.objects.none()
+        qs = GameInfoDesc.objects.all()
+        if self.q:
+            qs = qs.filter(game_name__istartswith=self.q)
+        return qs
 
 class gameinfoList(ListView):
     model = GameInfo
     template_name = 'gameinfo_list.html'
     paginate_by = 20
-    page=1
+    page = 1
 
     def get_context_data(self, **kwargs):
         context = super(gameinfoList, self).get_context_data(**kwargs)
@@ -28,7 +41,7 @@ class gameinfoList(ListView):
             context["is_paginated"] = False
 
         else:
-            post_list= GameInfo.objects.all().order_by('-game_id')
+            post_list = GameInfo.objects.all().order_by('-game_id')
         totalcnt = post_list.count()
         paginator = Paginator(post_list, self.paginate_by)
 
@@ -47,31 +60,74 @@ class gameinfoList(ListView):
 
 def create(request):
     if request.method == 'POST':
-        form = GameInfoForm(request.POST)
+        form = GameInfo_V2Form(request.POST)
+        formset = GameInfoDescFormset(request.POST)
+
         if form.is_valid():
-            new_form = form.save(commit = False)
+            new_form = form.save(commit=False)
             new_form.user = request.user.username
             new_form.save()
+            form.save_m2m()
+
+            if formset.is_valid():
+                for form in formset:
+                    game_name = form.cleaned_data.get('game_name')
+                    if game_name:
+                        gameinfo_desc = form.save(commit=False)
+                        gameinfo_desc.gameinfo_id = new_form.pk
+                        gameinfo_desc.save()
+
             return redirect('game_info')
     else:
-        form = GameInfoForm()
-    return render(request, 'gameinfo_create.html', {'form': form})
+        form = GameInfo_V2Form()
+        qs = GameInfoDesc.objects.none()
+        formset = GameInfoDescFormset(queryset=qs)
+    return render(request, 'gameinfo_create.html', {'form': form, 'formset': formset})
+
+import urllib.parse
+
+def url_with_querystring(path, **kwargs):
+    return path + '?' + urllib.parse.urlencode(kwargs)
 
 def update(request, pk):
-    g = GameInfo.objects.get(pk=pk)
+    page = request.GET.get('page', 1)
+    query = request.GET.get('query', '')
+
+    gameinfo = GameInfo.objects.get(pk=pk)
 
     if request.method == 'POST':
-        form = GameInfoForm(request.POST,instance=g)
-        if form.is_valid():
-            new_form = form.save(commit = False)
+        gameinfo_form = GameInfo_V2Form(request.POST, instance=gameinfo)
+        formset = GameInfoDescFormset(request.POST)
+
+        if gameinfo_form.is_valid():
+            new_form = gameinfo_form.save(commit=False)
             new_form.user = request.user.username
             new_form.save()
-            return redirect('game_info')
+            gameinfo_form.save_m2m()
+
+            if formset.is_valid():
+                gameinfo_desc = formset.save(commit=False)
+                for object in formset.deleted_objects:
+                    object.delete()
+
+                for form in gameinfo_desc:
+                    game_name = form.game_name
+                    if game_name:
+                        form.gameinfo_id = pk
+                        form.save()
+
+            quick_add_order_url = url_with_querystring(reverse('update_gameinfo', kwargs={'pk': pk}),
+                                                       page=page, query=query)
+
+            return redirect(reverse('update_gameinfo', kwargs={'pk': pk}))
+            #return quick_add_order_url
+
     else:
-        form = GameInfoForm(instance=g)
+        gameinfo_form = GameInfo_V2Form(instance=gameinfo)
+        formset = GameInfoDescFormset(queryset=GameInfoDesc.objects.filter(gameinfo_id=pk))
 
     return render(request, 'gameinfo_update.html', {
-        'form': form,
+        'gameinfo_form': gameinfo_form, 'formset': formset, 'pk': pk, 'page': page, 'query': query
     })
 
 @login_required
@@ -82,32 +138,24 @@ def delete(request, pk):
     return redirect('game_info')
 
 def view_post(request, pk, is_file):
-    gameinfo = GameInfo.objects.get(pk=pk)
-    movie_list = Movies.objects.all().filter(gameinfo_id=pk).order_by('-id')
-    subtitle_list = Subtitle.objects.all().filter(gameinfo_id=pk).order_by('-id')
-    image_list = GameImage.objects.all().filter(gameinfo_id=pk,div='image').order_by('-id')
-    subimage_list = GameImage.objects.all().filter(gameinfo_id=pk, div='subimage').order_by('-id')
-    setting_list = GameImage.objects.all().filter(gameinfo_id=pk,div='setting').order_by('-id')
-    faq_list = GameImage.objects.all().filter(gameinfo_id=pk,div='faq').order_by('-id')
-    desc_list = GameImage.objects.all().filter(gameinfo_id=pk,div='desc').order_by('-id')
-    summary_list = GameImage.objects.all().filter(gameinfo_id=pk,div='summary').order_by('-id')
-    moviedetail_list = MovieDetail.objects.all().filter(gameinfo_id=pk).order_by('-id')
-    form=''
-    moviedetail_results = []
-    for movie_detail in moviedetail_list:
-        result = {}
-        result['pk'] = movie_detail.pk
-        result['language_type'] = movie_detail.language_type
-        result['cnt_desc'] = movie_detail.cnt_desc
-        if Movies.objects.filter(pk=movie_detail.movie_id).exists():
-            result['moive_file'] = Movies.objects.filter(pk=movie_detail.movie_id).values_list('file', flat=True)[0]
-        subtitle_cnt = Subtitle.objects.filter(pk=movie_detail.subtitle_id).count()
-        if subtitle_cnt > 0 :
-            result['subtitle_file'] =Subtitle.objects.filter(pk=movie_detail.subtitle_id).values_list('file', flat=True)[0]
-        moviedetail_results.append(result)
+    page = request.GET.get('page', 1)
+    query = request.GET.get('query')
+
+    gameinfo = GameInfo.objects.get(id=pk)
+    movie_list = Movies.objects.filter(gameinfo_id=pk).order_by('-id')
+    subtitle_list = Subtitle.objects.filter(gameinfo_id=pk).order_by('-id')
+    image_list = GameImage.objects.filter(gameinfo_id=pk,div='image').order_by('-id')
+    subimage_list = GameImage.objects.filter(gameinfo_id=pk, div='subimage').order_by('-id')
+    setting_list = GameImage.objects.filter(gameinfo_id=pk, div='setting').order_by('-id')
+    faq_list = GameImage.objects.filter(gameinfo_id=pk, div='faq').order_by('-id')
+    desc_list = GameImage.objects.filter(gameinfo_id=pk, div='desc').order_by('-id')
+    summary_list = GameImage.objects.filter(gameinfo_id=pk, div='summary').order_by('-id')
+    moviedetail_list = MovieDetail.objects.filter(gameinfo_id=pk).order_by('-id')
+    req_movies_id = request.GET.get('movies_id', '')
+    game_name = GameInfoDesc.objects.get(gameinfo_id=pk,language__code='Kor').game_name
 
     if request.method == 'POST':
-        if is_file == '1' :
+        if is_file == '1':
             movie_form = MovieForm(request.POST, request.FILES)
             if movie_form.is_valid():
                 movie = movie_form.save(commit=False)
@@ -120,7 +168,7 @@ def view_post(request, pk, is_file):
             else:
                 data = {'is_valid': False}
             return JsonResponse(data)
-        elif is_file == '2' :
+        elif is_file == '2':
             subtitle_form = SubtitleForm(request.POST, request.FILES)
             if subtitle_form.is_valid():
                 subtitle = subtitle_form.save(commit=False)
@@ -131,7 +179,7 @@ def view_post(request, pk, is_file):
             else:
                 data = {'is_valid': False}
             return JsonResponse(data)
-        elif is_file == '3' :
+        elif is_file == '3':
             gameimage_form = GameImageForm(request.POST, request.FILES)
             if gameimage_form.is_valid():
                 gameimage = gameimage_form.save(commit=False)
@@ -143,7 +191,7 @@ def view_post(request, pk, is_file):
             else:
                 data = {'is_valid': False}
             return JsonResponse(data)
-        elif is_file == '4' :
+        elif is_file == '4':
             gameimage_form = GameImageForm(request.POST, request.FILES)
             if gameimage_form.is_valid():
                 gameimage = gameimage_form.save(commit=False)
@@ -155,7 +203,7 @@ def view_post(request, pk, is_file):
             else:
                 data = {'is_valid': False}
             return JsonResponse(data)
-        elif is_file == '5' :
+        elif is_file == '5':
             gameimage_form = GameImageForm(request.POST, request.FILES)
             if gameimage_form.is_valid():
                 gameimage = gameimage_form.save(commit=False)
@@ -169,7 +217,7 @@ def view_post(request, pk, is_file):
             else:
                 data = {'is_valid': False}
             return JsonResponse(data)
-        elif is_file == '6' :
+        elif is_file == '6':
             gameimage_form = GameImageForm(request.POST, request.FILES)
             if gameimage_form.is_valid():
                 gameimage = gameimage_form.save(commit=False)
@@ -183,7 +231,7 @@ def view_post(request, pk, is_file):
             else:
                 data = {'is_valid': False}
             return JsonResponse(data)
-        elif is_file == '7' :
+        elif is_file == '7':
             gameimage_form = GameImageForm(request.POST, request.FILES)
             if gameimage_form.is_valid():
                 gameimage = gameimage_form.save(commit=False)
@@ -197,7 +245,7 @@ def view_post(request, pk, is_file):
             else:
                 data = {'is_valid': False}
             return JsonResponse(data)
-        elif is_file == '8' :
+        elif is_file == '8':
             gameimage_form = GameImageForm(request.POST, request.FILES)
             if gameimage_form.is_valid():
                 gameimage = gameimage_form.save(commit=False)
@@ -210,18 +258,90 @@ def view_post(request, pk, is_file):
                 data = {'is_valid': False}
             return JsonResponse(data)
         else:
-
             form = MovieDetailForm(pk, request.POST)
             if form.is_valid():
                 movie_detail = form.save(commit=False)
                 movie_detail.gameinfo_id = pk
                 movie_detail.user = request.user.username
                 movie_detail.save()
-                return redirect(reverse('view_post', kwargs={'pk':pk, 'is_file': '0'}))
+                return redirect(reverse('view_post', kwargs={'pk': pk, 'is_file': '0'}))
+
     else:
         form = MovieDetailForm(pk)
 
-    return render(request, 'view_post.html', {'form': form,'movies': movie_list, "moviedetail_results" : moviedetail_results,'images': image_list,'subimages': subimage_list, 'subtitles': subtitle_list, "settings": setting_list,"faqs": faq_list, "descs":desc_list, "summaries":summary_list,'pk': pk,'is_file': is_file, 'gameinfo_title': gameinfo.game_name})
+    return render(request, 'view_post.html', {'form': form, 'movies': movie_list, 'images': image_list,
+                                              'gameinfo': gameinfo,
+                                              'subimages': subimage_list, 'subtitles': subtitle_list,
+                                              "settings": setting_list, "faqs": faq_list, "descs":desc_list,
+                                              "summaries": summary_list, 'moviedetail_list': moviedetail_list,
+                                              'pk': pk, 'is_file': is_file, 'gameinfo_title': game_name,
+                                              'page': page, 'query': query
+                                              })
+
+def view_movies_thumbnail(request, pk, movies_id):
+    page = request.GET.get('page', 1)
+    query = request.GET.get('query')
+
+    game_info = get_object_or_404(GameInfo, id=pk)
+    movies_info = get_object_or_404(Movies, id=movies_id)
+
+
+    image_form_set = modelformset_factory(MoviesThumbnail, form=MoviesThumbnailForm, max_num=10, extra=10)
+
+    if request.method == "POST":
+        formset = image_form_set(request.POST or None, request.FILES or None,
+                                 queryset=MoviesThumbnail.objects.filter(movies_id=movies_id))
+        if formset.is_valid():
+            instances = formset.save(commit=False)
+            for object in formset.deleted_objects:
+                object.delete()
+
+            for instance in instances:
+                instance.movies_id = movies_id
+                instance.user = request.user.username
+                instance.save()
+
+    initial_data = [{'order': 1, 'title': '기본세팅'}, {'order': 2, 'title': '승리조건1'}, {'order': 3, 'title': '종료조건'},
+                    {'order': 4, 'title': '승리조건2'}, {'order': 5, 'title': '상세 룰'}, {'order': 6, 'title': '점수계산'},
+                    {'order': 7, 'title': '진행 팁'}, {'order': 8, 'title': '요약설명'}, {'order': 9, 'title': '옵션1'},
+                    {'order': 10, 'title': '옵션2'}]
+
+    formset = image_form_set(queryset=MoviesThumbnail.objects.filter(movies_id=movies_id), initial=initial_data)
+
+    return render(request, 'view_movies_thumbnail.html',
+                {'formset': formset, 'game_info_title': game_info.game_name, 'movies_name':  movies_info.file.name,
+                 'movies_url': movies_info.file.url,
+                 'pk': pk, 'page': page, 'query': query})
+
+def view_fillters_v2(request, pk):
+    page = request.GET.get('page', 1)
+    query = request.GET.get('query')
+
+    game_info = get_object_or_404(GameInfo, id=pk)
+
+    form_set = modelformset_factory(GameFilter_V2, exclude=('gameinfo','user', 'gender',  'uploaded_at'),
+                                          max_num=7, extra=7)
+
+    if request.method == "POST":
+        formset = form_set(request.POST or None, queryset=GameFilter_V2.objects.filter(gameinfo_id=pk))
+        if formset.is_valid():
+            instances = formset.save(commit=False)
+            #for object in formset.deleted_objects:
+            #    object.delete()
+
+            for instance in instances:
+                instance.gameinfo_id = pk
+                instance.user = request.user.username
+                instance.save()
+
+    initial_data = [{'people': 2}, {'people': 3}, {'people': 4}, {'people': 5}, {'people': 6}, {'people': 7},
+                    {'people': 8}]
+
+    formset = form_set(queryset=GameFilter_V2.objects.filter(gameinfo_id=pk), initial=initial_data)
+
+    return render(request, 'view_filters_v2.html',
+                {'formset': formset, 'game_info_title': game_info.game_name,
+                 'pk': pk, 'page': page, 'query': query})
 
 def view_vod(request, pk):
 
@@ -364,7 +484,7 @@ def thema(request, pk, page):
         return render(request, 'view_thema.html', {'form': form,  'game_id': gameinfo.game_id, 'gameinfo_title': gameinfo.game_name, 'page':page})
 
 
-def filters(request,pk,page):
+def filters(request, pk, page):
     gameinfo = GameInfo.objects.get(pk=pk)
     g = GameFilter.objects.filter(gameinfo=pk)
     if len(g) > 0:

@@ -1,29 +1,16 @@
 ﻿{% extends 'base.html' %}
-{% load static %}
-{% load templatehelpers %}
-{% block javascript %}
-  {# JQUERY FILE UPLOAD SCRIPTS #}
-  <script src="{% static 'js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
-  <script src="{% static 'js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
-
-  {# PHOTOS PAGE SCRIPTS #}
-  <script src="{% static 'js/basic-upload.js' %}"></script>
-    <script src="{% static 'js/jquery-3.1.1.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
-{% endblock %}
-
 {% block content %}
     <div>
         <form name=searchf method=get action="{% url 'game_info' %}">
             <p align="right">
               <input type="text" name="query"  value="{{ query }}"/>
-              <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search" aria-hidden="true"></span> 게임명 검색</button>
+              <button class="btn btn-success" type="submit">게임명 검색</button>
             </p>
         </form>
         총 게시물수: {{ total_cnt }} <button class="btn btn-success search-btn" onclick="document.location.href='{% url 'create_gameinfo' %}'">게임추가</button>
     </div>
-<div class="table-responsive text-center">
-    <table class="table text-center table-hover">
+<div class="table-responsive">
+    <table class="table table-striped">
         <thead>
         <tr class="headings">
             <th>ID</th>
@@ -35,7 +22,7 @@
             <th>세팅방법</th>
             <th>FAQ</th>
             <th>설명서</th>
-            <th>LastUpdate</th>
+            <th>수정일</th>
             <th></th>
         </tr>
         </thead>
@@ -46,20 +33,20 @@
         {% for post in post_list %}
             <tr>
                 <td>{{ post.game_id}}</td>
-                <td><a href="{% url 'view_post' pk=post.pk is_file=0%}">{{ post.game_name }}</a></td>
+                <td><a href="{% url 'view_post' pk=post.pk is_file=0%}?page={{ page }}&query={{ query }}">{{ post.game_name_desc }}</a></td>
                 <td>{{ post.level }}</td>
                 <td>{{ post.created_date }}</td>
-                <td>{{ post.genre }}</td>
+                <td>{{ post.game_genre_desc }}</td>
                 <td>{{ post.media_cnt }} </td>
                 <td>{{ post.setting_cnt }} </td>
                 <td>{{ post.faq_cnt }} </td>
                 <td>{{ post.desc_cnt }}</td>
                 <td>{{ post.last_date }}</td>
                 <td>
-                    <button class="btn btn-success search-btn" onclick="document.location.href='{% url 'view_filters'  pk=post.pk page=page  %}'">필터</button>
-                    <button class="btn btn-success search-btn" onclick="document.location.href='{% url 'view_thema'  pk=post.pk page=page  %}'">테마</button>
-		<button class="btn btn-success search-btn" onclick="document.location.href='{% url 'update_gameinfo'  pk=post.pk %}'">수정</button>
-                    <a href='{% url 'delete_gameinfo' pk=post.pk %}' onclick="return confirm('정말 삭제하시겠습니까?')"><button class="btn btn-success search-btn" >삭제</button></a>
+                    <button class="btn btn-primary" onclick="document.location.href='{% url 'view_filters_v2'  pk=post.pk %}?page={{ page }}&query={{ query }}'">필터</button>
+                    <button class="btn btn-primary" onclick="document.location.href='{% url 'view_thema'  pk=post.pk page=page  %}'">테마</button>
+		            <button class="btn btn-warning" onclick="document.location.href='{% url 'update_gameinfo'  pk=post.pk %}?page={{ page }}&query={{ query }}'">수정</button>
+                    <a href='{% url 'delete_gameinfo' pk=post.pk %}' onclick="return confirm('정말 삭제하시겠습니까?')"><button class="btn btn-danger" >삭제</button></a>
                 </td>
             </tr>
         {% endfor %}

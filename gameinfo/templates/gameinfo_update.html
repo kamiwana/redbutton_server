@@ -1,13 +1,17 @@
 {% extends 'base.html' %}
-
-{% load staticfiles %}
-
+{% load static %}
+{% block javascript %}
+{% endblock %}
 {% block content %}
-<form method="POST" class="signup-form">
-{% csrf_token %}
-{{ form.as_p }}
-<input type="submit" class="save btn btn-success" value="수정하기">
-<button type="button" class="btn btn-danger" onclick="document.location.href='{% url 'game_info' %}'">취소</button>
-</form>
-
+    <form method="POST" class="signup-form">
+        {% csrf_token %}
+        {{ gameinfo_form.as_p }}
+        {{ formset.as_p }}
+        <input type="submit" class="save btn btn-success" value="수정하기">
+        <button type="button" class="btn btn-danger" onclick="document.location.href='{% url 'game_info' %}?page={{ page }}&query={{ query }}'">취소</button>
+    </form>
 {% endblock content %}
+<script type="text/javascript" src="{% static 'js/jquery-3.1.1.min.js' %}"></script>
+{{ gameinfo_form.media }}
+
+

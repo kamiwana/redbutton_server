@@ -53,26 +53,49 @@ video {
         document.getElementById('light').style.display='none';
         document.getElementById('fade').style.display='none';
     }
+
     </script>
 {% endblock %}
 {% block content %}
-    <div style="margin-bottom: 10px;margin-top: 10px">{{ gameinfo_title }}
-        <button class="btn btn-default" onclick="document.location.href={% url 'game_info' %}">게임정보</button>
-    </div>
-    <button type="button" class="btn btn-primary js-upload-photos">
-    <span class="glyphicon glyphicon-cloud-upload"></span> 영상업로드
-    </button>
-    <input id="fileupload" type="file" name="file"  multiple
-       style="display: none;"
-       data-url="{% url 'view_post' pk=pk is_file=1%}"
-       data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
-    <table id="gallery" class="table table-bordered" style="margin-top:10px;">
+<div style="margin-bottom: 10px;margin-top: 10px">게임명 : {{ gameinfo_title }}
+    <button class="btn btn-default" onclick="document.location.href='{% url 'game_info' %}?page={{ page }}&query={{ query }}'">게임정보</button>
+</div>
+<div>
+    <table class='table table-striped'>
+      <thead>
+        <tr>
+            <td>
+                <button type="button" class="btn btn-primary js-upload-photos">영상업로드 </button>
+                <input id="fileupload" type="file" name="file"  multiple
+                   style="display: none;"
+                   data-url="{% url 'view_post' pk=pk is_file=1%}"
+                   data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+            </td>
+        </tr>
+      </thead>
       <tbody>
         {% for movie in movies %}
           <tr>
-            <td><a href = "javascript:void(0)" onclick = "openPlayer();">{{ movie.file.name|cut:"gameinfo/movies/file/" }}</a></td>
             <td>
                 <a href="{% url 'delete_movie' pk=movie.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
+                <a href = "javascript:void(0)" onclick = "openPlayer();">{{ movie.file.name|cut:"gameinfo/movies/file/" }}</a>
+                   <br> <button class="btn btn-warning btn-sm" style="margin-right: 10px;margin-top: 10px" onclick="document.location.href='{% url 'view_movies_thumbnail'  pk=pk movies_id=movie.id %}?page={{ page }}&query={{ query }}'">썸네일업로드 </button>
+                    <table>
+                        <tbody>
+                            <tr>
+                                 {%for thumbnail in movie.movies_thumbnail.all %}
+                                <th>
+                                    {{ thumbnail.title }}
+                                    <br>
+                                    {% if thumbnail.image_url != None %}
+                                    <a href="{{ thumbnail.image_url }}"><img src=" {{thumbnail.image_url}}" width="50" height="50" style="margin-right: 10px"></a>
+                                    {% endif %}
+                                    <br>&nbsp;{{ thumbnail.time }}
+                                </th>
+                                 {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
             </td>
             <div id="light" class="white_content" align="center" oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
                 <video id="player" controls controlsList="nodownload">
@@ -86,188 +109,182 @@ video {
         {% endfor %}
       </tbody>
     </table>
+</div>
+<div>
+    <table class='table table-striped'>
+        <thead>
+            <tr>
+                <td>
+                    <button type="button" class="btn btn-primary js-upload-subtitle"> 자막업로드</button>
+                    <input id="fileupload_subtitle" type="file" name="file" multiple
+                       style="display: none;"
+                       data-url="{% url 'view_post' pk=pk is_file=2 %}"
+                       data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+                </td>
+            </tr>
+        </thead>
+    <tbody>
+        {% for subtitle in subtitles %}
+          <tr>
+            <td>
+                <a href="{% url 'delete_subtitle' pk=subtitle.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
+                <a href="{{ subtitle.file.url }}">{{ subtitle.file.name|cut:"gameinfo/movies/subtitle/" }}</a>
+            </td>
+           </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</div>
 
-    <button type="button" class="btn btn-primary js-upload-subtitle">
-    <span class="glyphicon glyphicon-cloud-upload"></span> 자막업로드
-    </button>
-    <input id="fileupload_subtitle" type="file" name="file" multiple
-       style="display: none;"
-       data-url="{% url 'view_post' pk=pk is_file=2 %}"
-       data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
-<table id="gallery_subtitle" class="table table-bordered" style="margin-top:10px;">
-  <tbody>
-    {% for subtitle in subtitles %}
-      <tr>
-        <td><a href="{{ subtitle.file.url }}">{{ subtitle.file.name }}</a></td>
-        <td>
-            <a href="{% url 'delete_subtitle' pk=subtitle.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
-        </td>
-  </span>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_table }}
-    <button type="submit" class="btn btn-success"  style="margin-top: 10px;">
-      <span class="glyphicon glyphicon-ok"></span> 등록
-    </button>
-  </form>
+<form method="post">
+    <div  class="form-group">
+        {% csrf_token %}
+        {{ form.as_table }}
+    </div>
+    <button type="submit" class="btn btn-primary"> 등록</button>
+</form>
 
-<table class="table table-bordered" style="margin-top:10px;">
-    <thead>
-    <tr class="headings">
-        <th>영상</th>
-        <th>인원수</th>
-        <th>자막</th>
-        <th>언어</th>
-        <th></th>
-    </tr>
-    </thead>
-  <tbody>
-    {% for moviedetail_result in moviedetail_results %}
-      <tr>
-        <td>{{ moviedetail_result.moive_file|cut:"gameinfo/movies/file/"  }}</td>
-        <td>{{ moviedetail_result.cnt_desc }}</td>
-        <td>{{ moviedetail_result.subtitle_file }}</td>
-        <td>{{ moviedetail_result.language_type }}</td>
-        <td>
-            <a href="{% url 'delete_moviedetail' pk=moviedetail_result.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
-        </td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-    <button type="button" class="btn btn-primary js-upload-image">
-    <span class="glyphicon glyphicon-cloud-upload"></span> 대표 이미지 업로드
-    </button>
+<div>
+    <table class="table table-bordered" style="margin-top:10px;">
+        <thead>
+            <tr class="headings">
+                <th>삭제</th>
+                <th>언어</th>
+                <th>영상</th>
+                <th>자막</th>
+                <th>인원수</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for moviedetail in  moviedetail_list%}
+            <tr>
+                <td>
+                    <a href="{% url 'delete_moviedetail' pk=moviedetail.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')">
+                        <img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
+                </td>
+                <td>{{ moviedetail.language_name }}</td>
+                <td>{{ moviedetail.movie_file_name }}</td>
+                <td>{{ moviedetail.subtitle_file_name }}</td>
+                <td>{{ moviedetail.cnt_desc }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div>
+    <button type="button" class="btn btn-primary js-upload-image">대표 이미지 업로드</button>
     <input id="fileupload_image" type="file" name="file" multiple
        style="display: none;"
        data-url="{% url 'view_post' pk=pk is_file=3 %}"
        data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
-<table id="gallery_image" class="table table-bordered" style="margin-top:10px;">
-  <tbody>
-    {% for image in images %}
-      <tr>
-        <td><a href="{{ image.file.url }}">{{ image.file.name }}</a></td>
-        <td>
-            <a href="{% url 'delete_image' pk=image.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
-        </td>
-  </span>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-    <button type="button" class="btn btn-primary js-upload-subimage">
-    <span class="glyphicon glyphicon-cloud-upload"></span> 서브이미지
-    </button>
+    <table id="gallery_image" class="table table-striped" style="margin-top:10px;">
+      <tbody>
+        {% for image in images %}
+          <tr>
+            <td>
+                <a href="{% url 'delete_image' pk=image.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
+                <a href="{{ image.file.url }}">{{ image.file.name }}</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</div>
+<div>
+    <button type="button" class="btn btn-primary js-upload-subimage">서브이미지 </button>
     <input id="fileupload_subimage" type="file" name="file" multiple
        style="display: none;"
        data-url="{% url 'view_post' pk=pk is_file=4 %}"
        data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
-<table id="gallery_subimage" class="table table-bordered" style="margin-top:10px;">
-  <tbody>
-    {% for subimage in subimages %}
-      <tr>
-        <td><a href="{{ subimage.file.url }}">{{ subimage.file.name }}</a></td>
-        <td>
-            <a href="{% url 'delete_subimage' pk=subimage.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
-        </td>
-  </span>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-    <button type="button" class="btn btn-primary js-upload-setting">
-    <span class="glyphicon glyphicon-cloud-upload"></span> 세팅방법 이미지 업로드
-    </button>
+    <table id="gallery_subimage" class="table table-striped" style="margin-top:10px;">
+      <tbody>
+        {% for subimage in subimages %}
+          <tr>
+            <td>
+                <a href="{% url 'delete_subimage' pk=subimage.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
+                <a href="{{ subimage.file.url }}">{{ subimage.file.name }}</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</div>
+<!--div>
+    <button type="button" class="btn btn-primary js-upload-setting">세팅방법 이미지 업로드</button>
     <input id="fileupload_setting" type="file" name="file" multiple
        style="display: none;"
        data-url="{% url 'view_post' pk=pk is_file=5 %}"
        data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
-<table id="gallery_setting" class="table table-bordered" style="margin-top:10px;">
-  <tbody>
-    {% for setting in settings %}
-      <tr>
-        <td><a href="{{ setting.file.url }}">{{ setting.file.name }}</a></td>
-        <td>
-            <a href="{% url 'delete_setting' pk=setting.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
-        </td>
-  </span>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-
-    <button type="button" class="btn btn-primary js-upload-faq">
-    <span class="glyphicon glyphicon-cloud-upload"></span> FAQ 이미지 업로드
-    </button>
+    <table id="gallery_setting" class="table table-striped" style="margin-top:10px;">
+      <tbody>
+        {% for setting in settings %}
+          <tr>
+            <td>
+                <a href="{% url 'delete_setting' pk=setting.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
+                <a href="{{ setting.file.url }}">{{ setting.file.name }}</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</div-->
+<div>
+    <button type="button" class="btn btn-primary js-upload-faq">FAQ 이미지 업로드</button>
     <input id="fileupload_faq" type="file" name="file" multiple
        style="display: none;"
        data-url="{% url 'view_post' pk=pk is_file=6 %}"
        data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
-<table id="gallery_faq" class="table table-bordered" style="margin-top:10px;">
-  <tbody>
-    {% for faq in faqs %}
-      <tr>
-        <td><a href="{{ faq.file.url }}">{{ faq.file.name }}</a></td>
-        <td>
-            <a href="{% url 'delete_faq' pk=faq.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
-        </td>
-  </span>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-
-    <button type="button" class="btn btn-primary js-upload-desc">
-    <span class="glyphicon glyphicon-cloud-upload"></span> 게임설명서 이미지업로드
-    </button>
+    <table id="gallery_faq" class="table table-striped" style="margin-top:10px;">
+      <tbody>
+        {% for faq in faqs %}
+          <tr>
+            <td>
+                <a href="{% url 'delete_faq' pk=faq.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
+                <a href="{{ faq.file.url }}">{{ faq.file.name }}</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</div>
+<div>
+    <button type="button" class="btn btn-primary js-upload-desc">게임설명서 이미지업로드</button>
     <input id="fileupload_desc" type="file" name="file" multiple
        style="display: none;"
        data-url="{% url 'view_post' pk=pk is_file=7 %}"
        data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
-<table id="gallery_desc" class="table table-bordered" style="margin-top:10px;">
-  <tbody>
-    {% for desc in descs %}
-      <tr>
-        <td><a href="{{ desc.file.url }}">{{ desc.file.name }}</a></td>
-        <td>
-            <a href="{% url 'delete_desc' pk=desc.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
-        </td>
-  </span>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-
-    <button type="button" class="btn btn-primary js-upload-summary">
-    <span class="glyphicon glyphicon-cloud-upload"></span> 요약설명 이미지 업로드
-    </button>
+    <table id="gallery_desc" class="table table-striped" style="margin-top:10px;">
+      <tbody>
+        {% for desc in descs %}
+          <tr>
+            <td>
+                <a href="{% url 'delete_desc' pk=desc.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
+                <a href="{{ desc.file.url }}">{{ desc.file.name }}</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</div>
+<!--div>
+    <button type="button" class="btn btn-primary js-upload-summary">요약설명 이미지 업로드</button>
     <input id="fileupload_summary" type="file" name="file" multiple
        style="display: none;"
        data-url="{% url 'view_post' pk=pk is_file=8 %}"
        data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
-<table id="gallery_summary" class="table table-bordered" style="margin-top:10px;">
-  <tbody>
-    {% for summary in summaries %}
-      <tr>
-        <td><a href="{{ summary.file.url }}">{{ summary.file.name }}</a></td>
-        <td>
-            <a href="{% url 'delete_summary' pk=summary.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
-        </td>
-  </span>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    <table id="gallery_summary" class="table table-striped" style="margin-top:10px;">
+      <tbody>
+        {% for summary in summaries %}
+          <tr>
+            <td>
+                <a href="{% url 'delete_summary' pk=summary.pk %}" onclick="return confirm('정말 삭제하시겠습니까?')"><img src="{% static 'image/delete.png' %}" class="delete" alt="삭제"></a>
+                <a href="{{ summary.file.url }}">{{ summary.file.name }}</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+</div-->
 <div class="modal fade" id="modal-progress" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog">
     <div class="modal-content">
