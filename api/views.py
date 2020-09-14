@@ -1,23 +1,17 @@
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from django.core.mail import EmailMessage
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.status import HTTP_401_UNAUTHORIZED
 from rest_framework import status
 from .permissions import  IsAuthenticatedOrCreate
 from .serializers import *
 from member.models import Profile
 from main.models import *
 from etc.models import *
-from django.core.mail import EmailMessage
-from rest_framework.renderers import JSONRenderer
-from django.http import HttpResponse
-from etc.models import *
-from .models import *
+from gameinfo import *
 
 @api_view(["POST"])
 def login(request):
@@ -31,10 +25,46 @@ def login(request):
     branch = Branch.objects.get(pk=profile.branch)
 
     return Response(
-        {"login_id": user.id, "branch": profile.branch, "room_number": profile.room_number,"auth": profile.auth,
-         "branch_name": branch.branch_name, "is_desc_request": branch.is_desc_request,"is_together":branch.is_together,"is_note":branch.is_note,
-         "is_forbidden_word":branch.is_forbidden_word,"forbidden_word_cnt":branch.forbidden_word_cnt, "forbidden_word_scope":branch.forbidden_word_scope, "system_volume":branch.system_volume
+        {"login_id": user.id, "branch": profile.branch, "room_number": profile.room_number,"auth": profile.auth, "language": profile.language.code,
+         "branch_name": branch.branch_name, "is_desc_request": branch.is_desc_request,"is_together":branch.is_together,
+         "is_note":branch.is_note,"is_forbidden_word":branch.is_forbidden_word,"forbidden_word_cnt":branch.forbidden_word_cnt,
+         "forbidden_word_scope":branch.forbidden_word_scope, "system_volume":branch.system_volume,
          })
+
+
+@api_view(["POST"])
+def check_sub_password(request):
+
+    username = request.data.get("username")
+    sub_password = request.data.get("sub_password")
+ #   sub_password2 = request.data.get("sub_password2")
+
+    try:
+        user = User.objects.get(username=username)
+        #if sub_password1 != sub_password2:
+        #    data = {
+        #        "result": -1,
+        #        "message": '비밀번호와 비밀번호 확인이 일치하지 않습니다. 다시 확인해주세요.',
+        #    }
+        #    return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
+        if user.profile.check_sub_password(sub_password):
+            data = {"result": 1}
+            return Response(data, status=status.HTTP_200_OK)
+        else:
+            data = {
+                "result": -2,
+                "message": '비밀번호가 일치하지 않습니다.'
+            }
+            return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
+    except User.DoesNotExist:
+        data = {
+            "result": 0,
+            "message": '존재하지 않는 ID 입니다.',
+        }
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 def layer(request, branch):
@@ -78,6 +108,46 @@ def guide_movie(request, branch):
     return Response(serializer.data)
 
 @api_view(['GET'])
+def guide_movie_language(request, branch, language):
+    try:
+        guide = Guide.objects.filter(branch=branch, language__code=language)
+    except Guide.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = GuideSerializer(guide, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def init_language(request, branch, language):
+    try:
+        init = Init.objects.filter(branch=branch, language__code=language)
+    except Course.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = Init_Serializer(init, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def course_language(request, branch, language):
+    try:
+        course = Course.objects.filter(branch=branch, language__code=language)
+    except Course.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = Course_V2_Serializer(course, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def layer_language(request, branch, language):
+    try:
+        layer = Layer.objects.all().filter(branch=branch, language__code=language)
+    except Course.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = LayerSerializer(layer, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
 def gameThema_list(request):
     try:
         thema = GameThema.objects.all()
@@ -87,12 +157,24 @@ def gameThema_list(request):
     serializer = GameThemaSerializer(thema, many=True)
     return Response(serializer.data)
 
+
+@api_view(['GET'])
+def game_fillters(request, gameinfo_id):
+    try:
+        game_fillter = GameFilter_V2.objects.filter(gameinfo_id=gameinfo_id)
+    except GameThema.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = GameFilter_V2_Serializer(game_fillter, many=True)
+    return Response(serializer.data)
+
+
 @api_view(['GET'])
 def branchGameinfo_list(request, branch):
     try:
          queryset = GameInfo.objects.raw(
       "SELECT  b.id as id, game_id, game_name,eng_title, level, created_date, genre, genre_detail, cnt, min_cnt, max_cnt, "
-      "play_time, desc_time, icon, 'desc', tag, media_cnt, setting_cnt, faq_cnt, desc_cnt, b.last_date as last_date, "
+      "play_time, desc_time, icon, `desc`, tag, media_cnt, setting_cnt, faq_cnt, desc_cnt, b.last_date as last_date, "
       "location, cant_explain "
       "FROM branch_gameinfo_branchgame as a, gameinfo_gameinfo as b "
       "WHERE a.gameinfo_id = b.id and a.branch_id= "+ branch + " order by id asc")
@@ -108,7 +190,7 @@ def branchGameinfo_list_v2(request, branch):
     try:
          queryset = GameInfo.objects.raw(
       "SELECT  b.id as id, game_id, game_name,eng_title, level, created_date, genre, genre_detail, cnt, min_cnt, max_cnt, "
-      "play_time, desc_time, icon,'desc', tag, media_cnt, setting_cnt, faq_cnt, desc_cnt, b.last_date as last_date,"
+      "play_time, desc_time, icon,`desc`, tag, media_cnt, setting_cnt, faq_cnt, desc_cnt, b.last_date as last_date,"
       "location, cant_explain "
       "FROM branch_gameinfo_branchgame as a, gameinfo_gameinfo as b "
       "WHERE a.gameinfo_id = b.id and a.branch_id=" + branch + " order by id asc")
@@ -133,6 +215,41 @@ def branchGameinfo_list_v3(request, branch):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     serializer = GameInfoSerializer_v3(queryset, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def branchGameinfo_list_v4(request, branch, language):
+    try:
+       #  queryset =GameInfo.objects.filter(gameinfo_branch__branch=branch, gameinfo_branch__is_view=1,
+        #                                   gameinfo_desc__language__code=language)
+       queryset = GameInfo.objects.raw(
+           "SELECT  gameinfo_gameinfo.id as id, game_id,  eng_title, level, created_date, min_cnt, max_cnt, play_time, "
+           "desc_time, icon, media_cnt, setting_cnt, faq_cnt, desc_cnt, gameinfo_gameinfo.last_date as last_date, "
+           "gameinfo_gameinfodesc.game_name, gameinfo_gameinfodesc.genre, gameinfo_gameinfodesc.genre_detail, "
+           "gameinfo_gameinfodesc.cnt, 'gameinfo_gameinfodesc.desc', gameinfo_gameinfodesc.tag, "
+           "location, cant_explain, gameinfo_gameinfo.user "
+           "FROM gameinfo_gameinfo INNER JOIN branch_gameinfo_branchgame ON "
+           "(gameinfo_gameinfo.id = branch_gameinfo_branchgame.gameinfo_id) "
+           " INNER JOIN gameinfo_gameinfodesc ON (gameinfo_gameinfo.id = gameinfo_gameinfodesc.gameinfo_id) "
+           " INNER JOIN language ON (gameinfo_gameinfodesc.language_id = language.idx) WHERE "
+           " (branch_gameinfo_branchgame.branch_id =  " + branch + " AND branch_gameinfo_branchgame.is_view = True "
+           " AND language.code = '" + language + "')  ")
+
+    except GameInfo.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = GameInfoSerializer_v4(queryset, many=True, context={'language': language})
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def moives_thumbnail(request, game_id):
+    try:
+        queryset = Movies.objects.filter(gameinfo__game_id=game_id)
+    except Movies.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = MoviesThumbnailListSerializer(queryset, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])
