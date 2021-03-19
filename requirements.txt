@@ -13,7 +13,7 @@ django-request-logging==0.5.4
 django-rest-swagger==2.1.2
 django-smtp-ssl==1.0
 django-storages==1.7.1
-djangorestframework==3.7.3
+djangorestframework==3.11.2
 docutils==0.14
 idna==2.6
 itypes==1.1.0
